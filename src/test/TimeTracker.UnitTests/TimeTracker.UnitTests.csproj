@@ -61,6 +61,15 @@
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Machine.Specifications">
+      <HintPath>..\..\..\tools\rhino\Machine.Specifications.dll</HintPath>
+    </Reference>
+    <Reference Include="Machine.Specifications.DevelopWithPassion">
+      <HintPath>..\..\..\tools\rhino\Machine.Specifications.DevelopWithPassion.dll</HintPath>
+    </Reference>
+    <Reference Include="Machine.Specifications.DevelopWithPassion.Rhino">
+      <HintPath>..\..\..\tools\rhino\Machine.Specifications.DevelopWithPassion.Rhino.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="MvcContrib, Version=1.0.0.916, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
