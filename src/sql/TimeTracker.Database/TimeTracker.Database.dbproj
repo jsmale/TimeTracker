@@ -18,10 +18,14 @@
     <DefaultDataPath>Undefined</DefaultDataPath>
     <DefaultSchema>dbo</DefaultSchema>
     <RootNamespace>TimeTracker.Database</RootNamespace>
-    <SccProjectName>SAK</SccProjectName>
-    <SccProvider>SAK</SccProvider>
-    <SccAuxPath>SAK</SccAuxPath>
-    <SccLocalPath>SAK</SccLocalPath>
+    <SccProjectName>
+    </SccProjectName>
+    <SccProvider>
+    </SccProvider>
+    <SccAuxPath>
+    </SccAuxPath>
+    <SccLocalPath>
+    </SccLocalPath>
     <PreviousProjectVersion>4.0</PreviousProjectVersion>
     <DSP>Microsoft.Data.Schema.Sql.Sql90DatabaseSchemaProvider</DSP>
     <AppDesignerFolder>Properties</AppDesignerFolder>

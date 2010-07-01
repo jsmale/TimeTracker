@@ -25,24 +25,6 @@ EndProject
 Project("{C8D11400-126E-41CD-887F-60BD40844F9E}") = "TimeTracker.Database", "src\sql\TimeTracker.Database\TimeTracker.Database.dbproj", "{DB08BD7D-258D-40C5-B6DF-5391C8C7C28A}"
 EndProject
 Global
-	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 5
-		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
-		SccTeamFoundationServer = http://elstamtfs01:8080/
-		SccLocalPath0 = .
-		SccProjectUniqueName1 = src\\app\\TimeTracker.Web\\TimeTracker.Web.csproj
-		SccProjectName1 = src/app/TimeTracker.Web
-		SccLocalPath1 = src\\app\\TimeTracker.Web
-		SccProjectUniqueName2 = src\\app\\TimeTracker\\TimeTracker.csproj
-		SccProjectName2 = src/app/TimeTracker
-		SccLocalPath2 = src\\app\\TimeTracker
-		SccProjectUniqueName3 = src\\test\\TimeTracker.UnitTests\\TimeTracker.UnitTests.csproj
-		SccProjectName3 = src/test/TimeTracker.UnitTests
-		SccLocalPath3 = src\\test\\TimeTracker.UnitTests
-		SccProjectUniqueName4 = src\\sql\\TimeTracker.Database\\TimeTracker.Database.dbproj
-		SccProjectName4 = src/sql/TimeTracker.Database
-		SccLocalPath4 = src\\sql\\TimeTracker.Database
-	EndGlobalSection
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = TimeTracker.vsmdi
 	EndGlobalSection
