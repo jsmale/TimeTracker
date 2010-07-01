@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<project name="PreBuild" xmlns="http://nant.sf.net/release/0.85/nant.xsd">
+	<property name="MembershipConnectionString" value="data source=2003dev-sql\sql2005;Initial Catalog=TimeTrackerMembership;User ID=timetracker;Password=133Ep62QiNnHhPcl;"/>
+	<property name="TimeTrackerConnectionString" value="data source=2003dev-sql\sql2005;Initial Catalog=TimeTracker;User ID=timetracker;Password=133Ep62QiNnHhPcl;"/>
+</project>

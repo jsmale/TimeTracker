@@ -1,0 +1,3 @@
+﻿ALTER TABLE [dbo].[Projects] ADD CONSTRAINT [PK__Projects__7E6CC920] PRIMARY KEY CLUSTERED  ([Id]) ON [PRIMARY]
+
+

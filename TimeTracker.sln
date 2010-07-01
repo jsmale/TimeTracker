@@ -1,0 +1,86 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{BAB7F001-C3BD-45ED-9541-D8AAED632D28}"
+	ProjectSection(SolutionItems) = preProject
+		LocalTestRun.testrunconfig = LocalTestRun.testrunconfig
+		TimeTracker.vsmdi = TimeTracker.vsmdi
+		WithCodeCoverage.testrunconfig = WithCodeCoverage.testrunconfig
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{30AB2C9C-E63C-4877-BFB8-8664A03193C4}"
+	ProjectSection(SolutionItems) = preProject
+		config\default.properties.xml = config\default.properties.xml
+		PreBuild.build = PreBuild.build
+		config\Release.properties.xml = config\Release.properties.xml
+		config\Web.config.template = config\Web.config.template
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeTracker.Web", "src\app\TimeTracker.Web\TimeTracker.Web.csproj", "{C03587E7-BAE2-4266-8601-C62D55DBCC49}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeTracker", "src\app\TimeTracker\TimeTracker.csproj", "{22B61CFD-87F7-49D0-8954-66774A8B5034}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeTracker.UnitTests", "src\test\TimeTracker.UnitTests\TimeTracker.UnitTests.csproj", "{A1E5F08B-BED0-404E-BAA1-FAF3A1C1FBEB}"
+EndProject
+Project("{C8D11400-126E-41CD-887F-60BD40844F9E}") = "TimeTracker.Database", "src\sql\TimeTracker.Database\TimeTracker.Database.dbproj", "{DB08BD7D-258D-40C5-B6DF-5391C8C7C28A}"
+EndProject
+Global
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 5
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = http://elstamtfs01:8080/
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = src\\app\\TimeTracker.Web\\TimeTracker.Web.csproj
+		SccProjectName1 = src/app/TimeTracker.Web
+		SccLocalPath1 = src\\app\\TimeTracker.Web
+		SccProjectUniqueName2 = src\\app\\TimeTracker\\TimeTracker.csproj
+		SccProjectName2 = src/app/TimeTracker
+		SccLocalPath2 = src\\app\\TimeTracker
+		SccProjectUniqueName3 = src\\test\\TimeTracker.UnitTests\\TimeTracker.UnitTests.csproj
+		SccProjectName3 = src/test/TimeTracker.UnitTests
+		SccLocalPath3 = src\\test\\TimeTracker.UnitTests
+		SccProjectUniqueName4 = src\\sql\\TimeTracker.Database\\TimeTracker.Database.dbproj
+		SccProjectName4 = src/sql/TimeTracker.Database
+		SccLocalPath4 = src\\sql\\TimeTracker.Database
+	EndGlobalSection
+	GlobalSection(TestCaseManagementSettings) = postSolution
+		CategoryFile = TimeTracker.vsmdi
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Default|Any CPU = Default|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C03587E7-BAE2-4266-8601-C62D55DBCC49}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C03587E7-BAE2-4266-8601-C62D55DBCC49}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C03587E7-BAE2-4266-8601-C62D55DBCC49}.Default|Any CPU.ActiveCfg = Debug|Any CPU
+		{C03587E7-BAE2-4266-8601-C62D55DBCC49}.Default|Any CPU.Build.0 = Debug|Any CPU
+		{C03587E7-BAE2-4266-8601-C62D55DBCC49}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C03587E7-BAE2-4266-8601-C62D55DBCC49}.Release|Any CPU.Build.0 = Release|Any CPU
+		{22B61CFD-87F7-49D0-8954-66774A8B5034}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{22B61CFD-87F7-49D0-8954-66774A8B5034}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{22B61CFD-87F7-49D0-8954-66774A8B5034}.Default|Any CPU.ActiveCfg = Debug|Any CPU
+		{22B61CFD-87F7-49D0-8954-66774A8B5034}.Default|Any CPU.Build.0 = Debug|Any CPU
+		{22B61CFD-87F7-49D0-8954-66774A8B5034}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{22B61CFD-87F7-49D0-8954-66774A8B5034}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1E5F08B-BED0-404E-BAA1-FAF3A1C1FBEB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1E5F08B-BED0-404E-BAA1-FAF3A1C1FBEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1E5F08B-BED0-404E-BAA1-FAF3A1C1FBEB}.Default|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1E5F08B-BED0-404E-BAA1-FAF3A1C1FBEB}.Default|Any CPU.Build.0 = Debug|Any CPU
+		{A1E5F08B-BED0-404E-BAA1-FAF3A1C1FBEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1E5F08B-BED0-404E-BAA1-FAF3A1C1FBEB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DB08BD7D-258D-40C5-B6DF-5391C8C7C28A}.Debug|Any CPU.ActiveCfg = Default|Any CPU
+		{DB08BD7D-258D-40C5-B6DF-5391C8C7C28A}.Debug|Any CPU.Build.0 = Default|Any CPU
+		{DB08BD7D-258D-40C5-B6DF-5391C8C7C28A}.Debug|Any CPU.Deploy.0 = Default|Any CPU
+		{DB08BD7D-258D-40C5-B6DF-5391C8C7C28A}.Default|Any CPU.ActiveCfg = Default|Any CPU
+		{DB08BD7D-258D-40C5-B6DF-5391C8C7C28A}.Default|Any CPU.Build.0 = Default|Any CPU
+		{DB08BD7D-258D-40C5-B6DF-5391C8C7C28A}.Default|Any CPU.Deploy.0 = Default|Any CPU
+		{DB08BD7D-258D-40C5-B6DF-5391C8C7C28A}.Release|Any CPU.ActiveCfg = Default|Any CPU
+		{DB08BD7D-258D-40C5-B6DF-5391C8C7C28A}.Release|Any CPU.Build.0 = Default|Any CPU
+		{DB08BD7D-258D-40C5-B6DF-5391C8C7C28A}.Release|Any CPU.Deploy.0 = Default|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

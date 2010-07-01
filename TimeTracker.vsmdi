@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestLists xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <TestList name="Lists of Tests" id="8c43106b-9dc1-4907-a29f-aa66a61bf5b6">
+    <RunConfiguration id="7792da34-afe3-40a4-8b2d-33cac57b5612" name="Local Test Run" storage="localtestrun.testrunconfig" type="Microsoft.VisualStudio.TestTools.Common.TestRunConfiguration, Microsoft.VisualStudio.QualityTools.Common,   PublicKeyToken=b03f5f7f11d50a3a" />
+  </TestList>
+  <TestList name="Controllers" id="cc58a60f-56f6-473f-9ee3-27ed92606c22" parentListId="8c43106b-9dc1-4907-a29f-aa66a61bf5b6">
+    <TestLinks>
+      <TestLink id="0f8eaafe-621b-8641-e66f-775d2a7569f8" name="Create_should_redirect_to_index" storage="src\test\timetracker.unittests\bin\debug\timetracker.unittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+      <TestLink id="856a2899-540a-3597-56ed-ab76c1bef07b" name="Create_should_return_view_if_project_is_not_valid" storage="src\test\timetracker.unittests\bin\debug\timetracker.unittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+      <TestLink id="98055944-7ac8-7728-7220-15612ba53a93" name="CreateShouldGetListOfProjectTaskTypesFromRepository" storage="src\test\timetracker.unittests\bin\debug\timetracker.unittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+      <TestLink id="83da7128-da23-3543-c432-90d8a38a865f" name="Create_should_delegate_to_project_tasks" storage="src\test\timetracker.unittests\bin\debug\timetracker.unittests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel,   PublicKeyToken=b03f5f7f11d50a3a" />
+    </TestLinks>
+  </TestList>
+</TestLists>

@@ -1,0 +1,3 @@
+﻿ALTER TABLE [dbo].[ProjectTaskType] ADD CONSTRAINT [PK__ProjectTaskType__08EA5793] PRIMARY KEY CLUSTERED  ([Id]) ON [PRIMARY]
+
+

@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<project name="PreBuild" xmlns="http://nant.sf.net/release/0.85/nant.xsd">
+	<property name="MembershipConnectionString" value="data source=.\SQLEXPRESS;Integrated Security=SSPI;AttachDBFilename=|DataDirectory|aspnetdb.mdf;User Instance=true"/>
+	<property name="TimeTrackerConnectionString" value="data source=.\SQLEXPRESS;Initial Catalog=TimeTracker;Integrated Security=SSPI;"/>
+</project>

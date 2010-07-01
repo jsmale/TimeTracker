@@ -1,0 +1,899 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<project name="Empowerx" default="standard" basedir="." xmlns="http://nant.sf.net/release/0.85/nant.xsd">
+	<property name="nant.settings.currentframework" value="net-3.5" />
+	<property name="debug" value="true" overwrite="false" />
+	<property name="deploy.to" value="local" overwrite="false" />
+	<property name="Configuration" value="Debug" />
+	<property name="Configuration" value="Release" if="${debug != 'true'}" />
+	<property name="teamcity" value="false" />
+	<property name="platform" value="" />
+
+	<include buildfile="default.properties.xml" />
+
+	<property name="deploy.properties" value="${deploy.to}.properties.xml" />
+
+	<if test="${file::exists(deploy.properties)}">
+		<echo message="Loading ${deploy.properties}" />
+		<include buildfile="${deploy.properties}" />
+	</if>
+
+	<target name="teamcity">
+		<property name="teamcity" value="true" />
+		<property name="CCNetLabel" value="${build.number}" overwrite="true" />
+		<property name="svn.revision" value="${build.vcs.number.1}" overwrite="true" />
+		<call target="server.deploy" />
+	</target>
+
+	<target name="teamcity.report">
+		<property name="teamcity" value="true" />
+		<property name="CCNetLabel" value="${build.number}" overwrite="true" />
+		<property name="svn.revision" value="${build.vcs.number.1}" overwrite="true" />
+		<call target="server.report.deploy" />
+	</target>
+
+	<target name="server.deploy" depends="clean, init, compile, compile-full, updateAllDatabase, test, noreport, post-sharp, deploy, server.main.deploy" />
+	
+	<target name="server.report.deploy" depends="clean, init, compile, compile-full, updateAllDatabase, test, reporting, post-sharp, deploy, server.main.deploy" />
+	
+	<target name="server.main.deploy">	</target>
+
+	<target name="all" depends="clean, init, compile, compile-full, updateDatabase, updateReportDatabase, test, reporting, post-sharp, deploy" />
+
+	<target name="standard" depends="init, compile, test, noreport" />
+
+	<target name="full" depends="clean, init, compile, compile-full, test, noreport" />
+
+	<target name="clean" description="remove all build products">
+
+		<delete dir="build"  if="${directory::exists('build')}" />
+		<delete dir="build-full"  if="${directory::exists('build-full')}" />
+		<delete>
+			<fileset basedir="deploy">
+				<include name="**/*" />
+			</fileset>
+		</delete>
+
+	</target>
+
+	<target name="init">
+
+		<mkdir dir="build" unless="${directory::exists('build')}" />
+		<mkdir dir="build-full" unless="${directory::exists('build-full')}" />
+		<mkdir dir="deploy" unless="${directory::exists('deploy')}" />
+
+	</target>
+
+	<target name="convert.template">
+		<copy file="${target}.template" tofile="${target}" overwrite="true">
+			<filterchain>
+				<replacetokens>
+					<token key="INITIAL_CATALOG" value="${initial.catalog}" />
+					
+				</replacetokens>
+			</filterchain>
+		</copy>
+	</target>
+
+	<target name="expand.template.files">
+
+		<property name="target" value="config\Web.config" />
+		<call target="convert.template" />
+		<copy file="config\Web.config" tofile="src\app\Empower.Web.Main\Web.config" overwrite="true" />
+		
+	</target>
+
+	<target name="create-assembly-info">
+		<property name="assembly-version" value="${project.version}.${CCNetLabel}.${svn.revision}" />
+		<echo message="Marking this build as version ${assembly-version}" />
+		<asminfo output="src\AssemblyInfo.cs" language="CSharp">
+			<imports>
+				<import namespace="System" />
+				<import namespace="System.Reflection" />
+				<import namespace="System.Runtime.InteropServices" />
+			</imports>
+			<attributes>
+				<attribute type="ComVisibleAttribute" value="false" />
+				<attribute type="AssemblyTitleAttribute" value="Empowerx" />
+				<attribute type="AssemblyVersionAttribute" value="${assembly-version}" />
+				<attribute type="AssemblyCopyrightAttribute" value="Copyright (c) 2009, Gold Standard" />
+				<attribute type="AssemblyProductAttribute" value="Empowerx" />
+				<attribute type="AssemblyCompanyAttribute" value="Gold Standard" />
+				<attribute type="AssemblyInformationalVersionAttribute" value="${assembly-version}" />
+				<attribute type="AssemblyFileVersionAttribute" value="${assembly-version}" />
+			</attributes>
+			<references>
+				<include name="System.dll" />
+			</references>
+		</asminfo>
+	</target>	
+
+	<target name="concat-web-main-scripts">
+		<exec program="tools\packer\packer.exe"
+		 workingdir="src\app\Empower.Web.Main\Content"
+		 commandline="-o scripts.min.js -m combine JavaScript\*.js" />
+	</target>
+
+	<target name="compile-web-main" depends="compile-dto, compile-tasks, compile-utility, compile-web, compile-web-core, expand.template.files, concat-web-main-scripts">
+		<csc target="library" output="build\Empower.Web.Main.dll" debug="${debug}" optimize="${debug != 'true'}" warnaserror="true">
+			<references>
+				<include name="build\Empower.DTO.dll" />
+				<include name="build\Empower.Tasks.dll" />
+				<include name="build\Common.Utility.dll" />
+				<include name="build\Empower.Web.dll" />
+				<include name="build\Empower.Web.Core.dll" />
+				<include name="lib\castle\*.dll" />
+				<include name="lib\log4net\log4net.dll" />
+				<include name="lib\aspmvc\*.dll" />
+				<include name="lib\xval\*.dll" />
+			</references>
+			<sources>
+				<include name="src\AssemblyInfo.cs" />
+				<include name="src\app\Empower.Web.Main\**\*.cs" />
+			</sources>
+		</csc>
+	</target>
+
+	
+
+
+
+	<target name="compile-lib-full" depends="init, create-assembly-info, test.copy.tools">
+		<csc target="library" output="build-full\Empower.dll" debug="${debug}" optimize="${debug != 'true'}" warnaserror="true">
+			<references>
+				<include name="lib\aspmvc\*.dll" />
+				<include name="lib\calculator\PhCalcTypeLib.dll" />
+				<include name="lib\castle\*.dll" />
+				<include name="lib\fax\*.dll" />
+				<include name="lib\filehelpers\*.dll" />
+				<include name="lib\log4net\*.dll"/>
+				<include name="lib\pdf\*.dll" />
+				<include name="lib\postsharp\*.dll" />
+				<include name="lib\quartz\*.dll" />
+				<include name="lib\sharpSSH\*.dll" />
+				<include name="lib\sharpZipLib\*.dll" />
+				<include name="lib\structuremap\*.dll" />
+				<include name="lib\velocity\*.dll" />
+				<include name="lib\webdav\*.dll" />
+				<include name="lib\xval\*.dll" />
+			</references>
+			<sources>
+				<include name="src\AssemblyInfo.cs" />
+				<include name="src\app\Empower\**\*.cs" />
+			</sources>
+		</csc>
+	</target>
+
+	<target name="post-sharp" depends="compile-lib-full">
+		<delete dir="build-full\postsharp-input" if="${directory::exists('build-full\postsharp-input')}" />
+		<mkdir dir="build-full\postsharp-input" />
+		<move file="build-full\Empower.dll" tofile="build-full\postsharp-input\Empower.dll" overwrite="true" />
+		<move file="build-full\Empower.pdb" tofile="build-full\postsharp-input\Empower.pdb" overwrite="true" unless="${debug == 'false'}" />
+
+		<exec program="lib\postsharp\postsharp.exe"
+		 workingdir="build-full"
+		 commandline="..\lib\PostSharp\Default.psproj postsharp-input\Empower.dll /P:SearchPath=.\ /P:Output=.\Empower.dll /P:IntermediateDirectory=.\postsharp /P:CleanIntermediate=false /P:SignAssembly=false /P:PrivateKeyLocation= /P:Configuration=${Configuration}"
+			/>
+	</target>
+
+	
+	
+	<target name="asp-view-compile">
+		<copy todir="${asp.view.compile.path}\bin">
+			<fileset basedir="build-full">
+				<include name="Empower.dll" />
+				<include name="Microsoft.Web.Mvc.dll" />
+				<include name="xVal.dll" />
+				<include name="System.Web.*.dll" />
+			</fileset>
+		</copy>
+		<exec program="${framework::get-framework-directory('net-2.0')}\aspnet_compiler.exe"
+				workingdir=".\"
+				commandline="-v temp -p ${asp.view.compile.path}"/>
+	</target>
+
+	<target name="compile-web-main-full" depends="compile-lib-full, expand.template.files, concat-web-main-scripts">
+		<csc target="library" output="build-full\Empower.Web.Main.dll" debug="${debug}" optimize="${debug != 'true'}" warnaserror="true">
+			<references>
+				<include name="build-full\Empower.dll" />
+				<include name="lib\castle\*.dll" />
+				<include name="lib\log4net\log4net.dll" />
+				<include name="lib\aspmvc\*.dll" />
+				<include name="lib\xval\*.dll" />
+			</references>
+			<sources>
+				<include name="src\AssemblyInfo.cs" />
+				<include name="src\app\Empower.Web.Core\**\*.cs" />
+				<include name="src\app\Empower.Web.Main\**\*.cs" />
+			</sources>
+		</csc>
+						
+		<delete dir="src\app\Empower.Web.Main\bin"  if="${directory::exists('src\app\Empower.Web.Main\bin')}" />
+		<copy todir="src\app\Empower.Web.Main\bin">
+			<fileset basedir="build-full">
+				<include name="Empower.Web.Main.dll" />
+			</fileset>
+		</copy>
+		<property name="asp.view.compile.path" value="src\app\Empower.Web.Main" overwrite="true" />
+		<call target="asp-view-compile" />
+	</target>
+
+	
+
+	<target name="compile-full" depends="compile-web-main-full, compile-service-full, compile-web-admin-full, compile-web-script-full, compile-web-mobile-full, compile-web-trainer-full, compile-web-icerxadmin-full, compile-web-icerxregistration-full" />
+
+	<target name="compile" depends="compile-web-main, compile-service, compile-web-admin, compile-personsearch, compile-web-script, compile-web-mobile, compile-web-trainer, compile-web-icerxadmin, compile-web-icerxregistration" />
+
+	<target name="compile-lib" depends="compile-web, expand.template.files" />
+
+	<target name="test.lib" depends="compile-lib-full">
+		<csc target="library" output="build-full\Empower.Test.dll" debug="${debug}" optimize="${debug != 'true'}" warnaserror="true">
+			<references>
+				<include name="build-full\Empower.dll" />
+				<include name="lib\rhino\*.dll" />
+				<include name="lib\castle\*.dll" />
+				<include name="lib\log4net\*.dll" />
+				<include name="tools\nunit\NUnit.Framework.dll" />
+				<include name="tools\nunit\NUnit.Framework.Extensions.dll" />
+				<include name="tools\moq\*.dll" />
+				<include name="lib\aspmvc\*.dll" />
+				<include name="lib\Calculator\PhCalcTypeLib.dll" />
+				<include name="lib\structuremap\*.dll" />
+				<include name="lib\xval\*.dll" />
+			</references>
+			<sources>
+				<include name="src\AssemblyInfo.cs" />
+				<include name="src\test\Empower.Test\**\*.cs" />
+			</sources>
+		</csc>
+	</target>
+
+	<target name="test.lib.slow" depends="test.lib">
+		<csc target="library" output="build-full\Empower.Test.Slow.dll" debug="${debug}" optimize="${debug != 'true'}" warnaserror="true">
+			<references>
+				<include name="build-full\Empower.dll" />
+				<include name="build-full\Empower.Test.dll" />
+				<include name="lib\rhino\*.dll" />
+				<include name="lib\castle\*.dll" />
+				<include name="lib\log4net\*.dll" />
+				<include name="tools\nunit\NUnit.Framework.dll" />
+				<include name="tools\nunit\NUnit.Framework.Extensions.dll" />
+				<include name="tools\moq\*.dll" />
+				<include name="lib\aspmvc\*.dll" />
+				<include name="lib\Calculator\PhCalcTypeLib.dll" />
+				<include name="lib\structuremap\*.dll" />
+				<include name="lib\xval\*.dll" />
+			</references>
+			<sources>
+				<include name="src\AssemblyInfo.cs" />
+				<include name="src\test\Empower.Test.Slow\**\*.cs" />
+			</sources>
+		</csc>
+	</target>
+
+	<target name="test.web.main" depends="compile-web-main-full, test.lib">
+		<csc target="library" output="build-full\Empower.Web.Main.Test.dll" debug="${debug}" optimize="${debug != 'true'}" warnaserror="true">
+			<references>
+				<include name="build-full\Empower.dll" />
+				<include name="build-full\Empower.Web.Main.dll" />
+				<include name="build-full\Empower.Test.dll" />
+				<include name="lib\rhino\*.dll" />
+				<include name="lib\castle\*.dll" />
+				<include name="lib\log4net\*.dll" />
+				<include name="tools\nunit\NUnit.Framework.dll" />
+				<include name="tools\nunit\NUnit.Framework.Extensions.dll" />
+				<include name="tools\moq\*.dll" />
+				<include name="lib\aspmvc\*.dll" />
+				<include name="lib\Calculator\PhCalcTypeLib.dll" />
+			</references>
+			<sources>
+				<include name="src\AssemblyInfo.cs" />
+				<include name="src\test\Empower.Web.Core.Test\**\*.cs" />
+				<include name="src\test\Empower.Web.Main.Test\**\*.cs" />
+			</sources>
+		</csc>
+	</target>
+
+	<target name="test.web.script" depends="compile-web-script-full, test.lib">
+		<csc target="library" output="build-full\Empower.Web.Script.Test.dll" debug="${debug}" optimize="${debug != 'true'}" warnaserror="true">
+			<references>
+				<include name="build-full\Empower.dll" />
+				<include name="build-full\Empower.Web.Script.dll" />
+				<include name="build-full\Empower.Test.dll" />
+				<include name="lib\rhino\*.dll" />
+				<include name="lib\castle\*.dll" />
+				<include name="lib\log4net\*.dll" />
+				<include name="tools\nunit\NUnit.Framework.dll" />
+				<include name="tools\nunit\NUnit.Framework.Extensions.dll" />
+				<include name="tools\moq\*.dll" />
+				<include name="lib\aspmvc\*.dll" />
+				<include name="lib\structuremap\*.dll" />
+			</references>
+			<sources>
+				<include name="src\AssemblyInfo.cs" />
+				<include name="src\test\Empower.Web.Script.Test\**\*.cs" />
+			</sources>
+		</csc>
+	</target>
+
+	<target name="test.web.admin" depends="compile-web-admin-full, test.lib">
+		<csc target="library" output="build-full\Empower.Web.Admin.Test.dll" debug="${debug}" optimize="${debug != 'true'}" warnaserror="true">
+			<references>
+				<include name="build-full\Empower.dll" />
+				<include name="build-full\Empower.Web.Admin.dll" />
+				<include name="build-full\Empower.Test.dll" />
+				<include name="lib\rhino\*.dll" />
+				<include name="lib\castle\*.dll" />
+				<include name="lib\log4net\*.dll" />
+				<include name="tools\nunit\NUnit.Framework.dll" />
+				<include name="tools\nunit\NUnit.Framework.Extensions.dll" />
+				<include name="tools\moq\*.dll" />
+				<include name="lib\aspmvc\*.dll" />
+				<include name="lib\structuremap\*.dll" />
+			</references>
+			<sources>
+				<include name="src\AssemblyInfo.cs" />
+				<include name="src\test\Empower.Web.Admin.Test\**\*.cs" />
+			</sources>
+		</csc>
+	</target>
+
+	<target name="test.web.trainer" depends="compile-web-trainer-full, test.lib">
+		<csc target="library" output="build-full\Empower.Web.Trainer.Test.dll" debug="${debug}" optimize="${debug != 'true'}" warnaserror="true">
+			<references>
+				<include name="build-full\Empower.dll" />
+				<include name="build-full\Empower.Web.Trainer.dll" />
+				<include name="build-full\Empower.Test.dll" />
+				<include name="lib\rhino\*.dll" />
+				<include name="lib\castle\*.dll" />
+				<include name="lib\log4net\*.dll" />
+				<include name="tools\nunit\NUnit.Framework.dll" />
+				<include name="tools\nunit\NUnit.Framework.Extensions.dll" />
+				<include name="tools\moq\*.dll" />
+				<include name="lib\aspmvc\*.dll" />
+				<include name="lib\structuremap\*.dll" />
+			</references>
+			<sources>
+				<include name="src\AssemblyInfo.cs" />
+				<include name="src\test\Empower.Web.Trainer.Test\**\*.cs" />
+			</sources>
+		</csc>
+	</target>
+
+	<target name="test.web.icerxadmin" depends="compile-web-icerxadmin-full, test.lib">
+		<csc target="library" output="build-full\Empower.Web.IceRxAdmin.Test.dll" debug="${debug}" optimize="${debug != 'true'}" warnaserror="true">
+			<references>
+				<include name="build-full\Empower.dll" />
+				<include name="build-full\Empower.Web.IceRxAdmin.dll" />
+				<include name="build-full\Empower.Test.dll" />
+				<include name="lib\rhino\*.dll" />
+				<include name="lib\castle\*.dll" />
+				<include name="lib\log4net\*.dll" />
+				<include name="tools\nunit\NUnit.Framework.dll" />
+				<include name="tools\nunit\NUnit.Framework.Extensions.dll" />
+				<include name="tools\moq\*.dll" />
+				<include name="lib\aspmvc\*.dll" />
+				<include name="lib\structuremap\*.dll" />
+			</references>
+			<sources>
+				<include name="src\AssemblyInfo.cs" />
+				<include name="src\test\Empower.Web.IceRxAdmin.Test\**\*.cs" />
+			</sources>
+		</csc>
+	</target>
+
+	<target name="test.web.icerxregistration" depends="compile-web-icerxregistration-full, test.lib">
+		<csc target="library" output="build-full\Empower.Web.IceRxRegistration.Test.dll" debug="${debug}" optimize="${debug != 'true'}" warnaserror="true">
+			<references>
+				<include name="build-full\Empower.dll" />
+				<include name="build-full\Empower.Web.IceRxRegistration.dll" />
+				<include name="build-full\Empower.Test.dll" />
+				<include name="lib\rhino\*.dll" />
+				<include name="lib\castle\*.dll" />
+				<include name="lib\log4net\*.dll" />
+				<include name="tools\nunit\NUnit.Framework.dll" />
+				<include name="tools\nunit\NUnit.Framework.Extensions.dll" />
+				<include name="tools\moq\*.dll" />
+				<include name="lib\aspmvc\*.dll" />
+				<include name="lib\structuremap\*.dll" />
+			</references>
+			<sources>
+				<include name="src\AssemblyInfo.cs" />
+				<include name="src\test\Empower.Web.IceRxRegistration.Test\**\*.cs" />
+			</sources>
+		</csc>
+	</target>
+
+	<target name="test.compile" depends="test.lib, test.web.main, test.web.script, test.web.admin, test.web.trainer, test.web.icerxadmin, test.web.icerxregistration" />
+
+	<target name="test.copy.tools" depends="expand.template.files">
+		<copy todir="build-full" flatten="true" >
+			<fileset basedir="lib">
+				<include name="aspmvc\*.dll" />
+				<include name="calculator\*.dll" />
+				<include name="castle\*.dll" />
+				<include name="rhino\*.dll" />
+				<include name="fax\*.dll" />
+				<include name="filehelpers\*.dll" />
+				<include name="log4net\*.dll" />
+				<include name="quartz\*.dll" />
+				<include name="pdf\*.dll" />
+				<include name="PostSharp\*.dll" />
+				<include name="sharpSSH\*.dll" />
+				<include name="sharpZipLib\*.dll" />
+				<include name="structuremap\*.dll" />
+				<include name="velocity\*.dll" />
+				<include name="webdav\*.dll" />
+				<include name="xval\*.dll" />
+			</fileset>
+		</copy>
+		<copy todir="build-full" flatten="true">
+			<fileset basedir="tools">
+				<include name="nunit\**\*.dll" />
+				<include name="moq\*.dll" />
+			</fileset>
+		</copy>
+		<copy file="src\test\Empower.Test\App.config" tofile="build-full\Empower.Test.dll.config"/>
+		<copy todir="build-full" flatten="true">
+			<fileset basedir="src\test\Empower.Test">
+				<include name="Windsor.config" />
+				<include name="logging.config" />
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="test" depends="test.compile, test.copy.tools" />
+
+	<target name="noreport" depends="test">
+		<nunit2>
+			<formatter type="Plain" />
+			<test>
+				<assemblies basedir="build-full">
+					<include name="Empower.Test.dll" />
+					<include name="Empower.Web.Main.Test.dll" />
+					<include name="Empower.Web.Script.Test.dll" />
+					<include name="Empower.Web.Admin.Test.dll" />
+					<include name="Empower.Web.Trainer.Test.dll" />
+					<include name="Empower.Web.IceRxAdmin.Test.dll" />
+					<include name="Empower.Web.IceRxRegistration.Test.dll" />
+				</assemblies>
+			</test>
+		</nunit2>
+	</target>
+
+	<target name="noreport-all" depends="test.lib.slow, noreport">
+		<nunit2>
+			<formatter type="Plain" />
+			<test>
+				<assemblies basedir="build-full">
+					<include name="Empower.Test.Slow.dll" />
+				</assemblies>
+			</test>
+		</nunit2>
+	</target>
+
+	<target name="reporting" depends="test">
+		<mkdir dir="build\nunit" unless="${directory::exists('build\nunit')}" />
+		<exec program="tools\ncover\NCover.Console.exe"
+				workingdir="build-full"
+				commandline="..\tools\nunit\nunit-console.exe Empower.Test.dll /xml:Empower-NUnit-Result.xml /noshadow //ea CoverageExcludeAttribute //reg //x Empower-NCover.xml //a Empower"/>
+
+		<exec program="tools\NCoverExplorer\NCoverExplorer.Console.exe"
+				workingdir="build-full"
+				commandline="/c:..\Empower.NCoverExplorer.config"/>
+
+		<exec program="tools\ncover\NCover.Console.exe"
+		  workingdir="build-full"
+		  commandline="..\tools\nunit\nunit-console.exe Empower.Web.Main.Test.dll /xml:Empower.Web.Main-NUnit-Result.xml /noshadow //ea CoverageExcludeAttribute //reg //x Empower.Web.Main-NCover.xml //a Empower.Web.Main"/>
+
+		<exec program="tools\NCoverExplorer\NCoverExplorer.Console.exe"
+				workingdir="build-full"
+				commandline="/c:..\Empower.Web.Main.NCoverExplorer.config"/>
+
+		<exec program="tools\ncover\NCover.Console.exe"
+				workingdir="build-full"
+				commandline="..\tools\nunit\nunit-console.exe Empower.Web.Script.Test.dll /xml:Empower.Web.Script-NUnit-Result.xml /noshadow //ea CoverageExcludeAttribute //reg //x Empower.Web.Script-NCover.xml //a Empower.Web.Script"/>
+
+		<exec program="tools\ncover\NCover.Console.exe"
+				workingdir="build-full"
+				commandline="..\tools\nunit\nunit-console.exe Empower.Web.Admin.Test.dll /xml:Empower.Web.Admin-NUnit-Result.xml /noshadow //ea CoverageExcludeAttribute //reg //x Empower.Web.Admin-NCover.xml //a Empower.Web.Admin"/>
+
+		<exec program="tools\ncover\NCover.Console.exe"
+				workingdir="build-full"
+				commandline="..\tools\nunit\nunit-console.exe Empower.Web.Trainer.Test.dll /xml:Empower.Web.Trainer-NUnit-Result.xml /noshadow //ea CoverageExcludeAttribute //reg //x Empower.Web.Trainer-NCover.xml //a Empower.Web.Trainer"/>
+
+		<exec program="tools\ncover\NCover.Console.exe"
+				workingdir="build-full"
+				commandline="..\tools\nunit\nunit-console.exe Empower.Web.IceRxAdmin.Test.dll /xml:Empower.Web.IceRxAdmin-NUnit-Result.xml /noshadow //ea CoverageExcludeAttribute //reg //x Empower.Web.IceRxAdmin-NCover.xml //a Empower.Web.IceRxAdmin"/>
+
+		<exec program="tools\ncover\NCover.Console.exe"
+				workingdir="build-full"
+				commandline="..\tools\nunit\nunit-console.exe Empower.Web.IceRxRegistration.Test.dll /xml:Empower.Web.IceRxRegistration-NUnit-Result.xml /noshadow //ea CoverageExcludeAttribute //reg //x Empower.Web.IceRxRegistration-NCover.xml //a Empower.Web.IceRxRegistration"/>
+
+		<!--<exec program="tools\fxcop\fxcopcmd.exe"
+          commandline="/p:Empower.fxcop /o:build\Empower-FxCop-Result.xml" failonerror="false"/>-->
+	</target>
+
+	<target name="reporting-all" depends="test, test.lib.slow">
+		<exec program="tools\ncover\NCover.Console.exe"
+				workingdir="build-full"
+				commandline="..\tools\nunit\nunit-console.exe Empower.Test.dll Empower.Test.Slow.dll /xml:Empower-NUnit-Result.xml /noshadow //ea CoverageExcludeAttribute //reg //x Empower-NCover.xml //a Empower"/>
+
+		<exec program="tools\NCoverExplorer\NCoverExplorer.Console.exe"
+				workingdir="build-full"
+				commandline="/c:..\Empower.NCoverExplorer.config"/>
+
+		<exec program="tools\ncover\NCover.Console.exe"
+		  workingdir="build-full"
+		  commandline="..\tools\nunit\nunit-console.exe Empower.Web.Main.Test.dll /xml:Empower.Web.Main-NUnit-Result.xml /noshadow //ea CoverageExcludeAttribute //reg //x Empower.Web.Main-NCover.xml //a Empower.Web.Main"/>
+
+		<exec program="tools\NCoverExplorer\NCoverExplorer.Console.exe"
+				workingdir="build-full"
+				commandline="/c:..\Empower.Web.Main.NCoverExplorer.config"/>
+
+		<exec program="tools\ncover\NCover.Console.exe"
+				workingdir="build-full"
+				commandline="..\tools\nunit\nunit-console.exe Empower.Web.Script.Test.dll /xml:Empower.Web.Script-NUnit-Result.xml /noshadow //ea CoverageExcludeAttribute //reg //x Empower.Web.Script-NCover.xml //a Empower.Web.Script"/>
+
+		<exec program="tools\ncover\NCover.Console.exe"
+				workingdir="build-full"
+				commandline="..\tools\nunit\nunit-console.exe Empower.Web.Admin.Test.dll /xml:Empower.Web.Admin-NUnit-Result.xml /noshadow //ea CoverageExcludeAttribute //reg //x Empower.Web.Admin-NCover.xml //a Empower.Web.Admin"/>
+
+		<exec program="tools\ncover\NCover.Console.exe"
+				workingdir="build-full"
+				commandline="..\tools\nunit\nunit-console.exe Empower.Web.Trainer.Test.dll /xml:Empower.Web.Trainer-NUnit-Result.xml /noshadow //ea CoverageExcludeAttribute //reg //x Empower.Web.Trainer-NCover.xml //a Empower.Web.Trainer"/>
+
+		<exec program="tools\ncover\NCover.Console.exe"
+				workingdir="build-full"
+				commandline="..\tools\nunit\nunit-console.exe Empower.Web.IceRxAdmin.Test.dll /xml:Empower.Web.IceRxAdmin-NUnit-Result.xml /noshadow //ea CoverageExcludeAttribute //reg //x Empower.Web.IceRxAdmin-NCover.xml //a Empower.Web.IceRxAdmin"/>
+
+		<exec program="tools\ncover\NCover.Console.exe"
+				workingdir="build-full"
+				commandline="..\tools\nunit\nunit-console.exe Empower.Web.IceRxRegistration.Test.dll /xml:Empower.Web.IceRxRegistration-NUnit-Result.xml /noshadow //ea CoverageExcludeAttribute //reg //x Empower.Web.IceRxRegistration-NCover.xml //a Empower.Web.IceRxRegistration"/>
+	</target>
+
+	<target name="deploy" depends="compile-full, test, post-sharp">
+		<mkdir dir="deploy\web-mobile" />
+		<copy todir="deploy\web-mobile">
+			<fileset basedir="src\app\Empower.Web.Mobile">
+				<include name="**\*.aspx" />
+				<include name="**\*.ascx" />
+				<include name="**\*.master" />
+				<include name="*.asax" />
+				<include name="*.config" />
+				<include name="Views\*.config" />
+				<include name="Content\**\*.*" />
+			</fileset>
+		</copy>
+		<mkdir dir="deploy\web-mobile\bin" />
+		<copy todir="deploy\web-mobile\bin" flatten="true">
+			<fileset>
+				<include name="build-full\Empower.dll" />
+				<include name="build-full\Empower.Web.Mobile.dll" />
+				<include name="lib\castle\*.*"/>
+				<include name="lib\log4net\*.dll"/>
+				<include name="lib\filehelpers\*.dll"/>
+				<include name="lib\aspmvc\Microsoft.Web.Mvc.dll" />
+				<include name="lib\aspmvc\System.Web.Mvc.dll" />
+				<include name="lib\pdf\*.dll" />
+				<include name="lib\fax\*.dll" />
+				<include name="lib\velocity\*.dll" />
+				<include name="lib\quartz\*.dll" />
+				<include name="lib\structuremap\*.dll" />
+				<include name="lib\postsharp\*.dll" />
+				<include name="lib\xval\*.dll" />
+			</fileset>
+		</copy>
+		<if test="${debug != 'false'}">
+			<copy todir="deploy\web-mobile\bin">
+				<fileset basedir="build-full" >
+					<include name="Empower.pdb" />
+					<include name="Empower.Web.Mobile.pdb" />
+				</fileset>
+			</copy>
+		</if>
+
+		<mkdir dir="deploy\web" />
+		<copy todir="deploy\web">
+			<fileset basedir="src\app\Empower.Web.Main">
+				<include name="**\*.aspx" />
+				<include name="**\*.ascx" />
+				<include name="**\*.master" />
+				<include name="*.asax" />
+				<include name="*.config" />
+				<include name="Views\*.config" />
+				<include name="Content\**\*.*" />
+			</fileset>
+		</copy>
+		<mkdir dir="deploy\web\bin" />
+		<copy todir="deploy\web\bin" flatten="true">
+			<fileset>
+				<include name="build-full\Empower.dll" />
+				<include name="build-full\Empower.Web.Main.dll" />
+				<include name="lib\castle\*.*"/>
+				<include name="lib\log4net\*.dll"/>
+				<include name="lib\filehelpers\*.dll"/>
+				<include name="lib\aspmvc\Microsoft.Web.Mvc.dll" />
+				<include name="lib\aspmvc\System.Web.Mvc.dll" />
+				<include name="lib\pdf\*.dll" />
+				<include name="lib\fax\*.dll" />
+				<include name="lib\velocity\*.dll" />
+				<include name="lib\quartz\*.dll" />
+				<include name="lib\Calculator\PhCalcTypeLib.dll" />
+				<include name="lib\structuremap\*.dll" />
+				<include name="lib\postsharp\*.dll" />
+				<include name="lib\xval\*.dll" />
+			</fileset>
+		</copy>
+		<if test="${debug != 'false'}">
+			<copy todir="deploy\web\bin">
+				<fileset basedir="build-full" >
+					<include name="Empower.pdb" />
+					<include name="Empower.Web.Main.pdb" />
+				</fileset>
+			</copy>
+		</if>
+
+		<mkdir dir="deploy\web-script" />
+		<copy todir="deploy\web-script">
+			<fileset basedir="src\app\Empower.Web.Script">
+				<include name="**\*.aspx" />
+				<include name="**\*.ascx" />
+				<include name="**\*.master" />
+				<include name="*.asax" />
+				<include name="*.config" />
+				<include name="Views\*.config" />
+				<include name="Content\**\*.*" />
+			</fileset>
+		</copy>
+		<mkdir dir="deploy\web-script\bin" />
+		<copy todir="deploy\web-script\bin" flatten="true">
+			<fileset>
+				<include name="build-full\Empower.dll" />
+				<include name="build-full\Empower.Web.Script.dll" />
+				<include name="lib\castle\*.*"/>
+				<include name="lib\log4net\*.dll"/>
+				<include name="lib\filehelpers\*.dll"/>
+				<include name="lib\aspmvc\Microsoft.Web.Mvc.dll" />
+				<include name="lib\aspmvc\System.Web.Mvc.dll" />
+				<include name="lib\pdf\*.dll" />
+				<include name="lib\fax\*.dll" />
+				<include name="lib\velocity\*.dll" />
+				<include name="lib\quartz\*.dll" />
+				<include name="lib\structuremap\*.dll" />
+				<include name="lib\postsharp\*.dll" />
+				<include name="lib\xval\*.dll" />
+			</fileset>
+		</copy>
+		<if test="${debug != 'false'}">
+			<copy todir="deploy\web-script\bin">
+				<fileset basedir="build-full" >
+					<include name="Empower.pdb" />
+					<include name="Empower.Web.Script.pdb" />
+				</fileset>
+			</copy>
+		</if>
+
+		<mkdir dir="deploy\web-admin" />
+		<copy todir="deploy\web-admin">
+			<fileset basedir="src\app\Empower.Web.Admin">
+				<include name="**\*.aspx" />
+				<include name="**\*.ascx" />
+				<include name="**\*.master" />
+				<include name="*.asax" />
+				<include name="*.config" />
+				<include name="Views\*.config" />
+				<include name="Content\**\*.*" />
+			</fileset>
+		</copy>
+		<mkdir dir="deploy\web-admin\bin" />
+		<copy todir="deploy\web-admin\bin" flatten="true">
+			<fileset>
+				<include name="build-full\Empower.dll" />
+				<include name="build-full\Empower.Web.Admin.dll" />
+				<include name="lib\castle\*.*"/>
+				<include name="lib\log4net\*.dll"/>
+				<include name="lib\filehelpers\*.dll"/>
+				<include name="lib\aspmvc\Microsoft.Web.Mvc.dll" />
+				<include name="lib\aspmvc\System.Web.Mvc.dll" />
+				<include name="lib\pdf\*.dll" />
+				<include name="lib\fax\*.dll" />
+				<include name="lib\velocity\*.dll" />
+				<include name="lib\webdav\*.dll" />
+				<include name="lib\sharpssh\*.dll" />
+				<include name="lib\sharpziplib\*.dll" />
+				<include name="lib\quartz\*.dll" />
+				<include name="lib\structuremap\*.dll" />
+				<include name="lib\postsharp\*.dll" />
+				<include name="lib\xval\*.dll" />
+			</fileset>
+		</copy>
+		<if test="${debug != 'false'}">
+			<copy todir="deploy\web-admin\bin">
+				<fileset basedir="build-full" >
+					<include name="Empower.pdb" />
+					<include name="Empower.Web.Admin.pdb" />
+				</fileset>
+			</copy>
+		</if>
+		
+
+		<mkdir dir="deploy\web-trainer" />
+		<copy todir="deploy\web-trainer">
+			<fileset basedir="src\app\Empower.Web.Trainer">
+				<include name="**\*.aspx" />
+				<include name="**\*.ascx" />
+				<include name="**\*.master" />
+				<include name="*.asax" />
+				<include name="*.config" />
+				<include name="Views\*.config" />
+				<include name="Content\**\*.*" />
+				<include name="Scripts\**\*.*" />
+			</fileset>
+		</copy>
+		<mkdir dir="deploy\web-trainer\bin" />
+		<copy todir="deploy\web-trainer\bin" flatten="true">
+			<fileset>
+				<include name="build-full\Empower.dll" />
+				<include name="build-full\Empower.Web.Trainer.dll" />
+				<include name="lib\castle\*.*"/>
+				<include name="lib\log4net\*.dll"/>
+				<include name="lib\filehelpers\*.dll"/>
+				<include name="lib\aspmvc\Microsoft.Web.Mvc.dll" />
+				<include name="lib\aspmvc\System.Web.Mvc.dll" />
+				<include name="lib\pdf\*.dll" />
+				<include name="lib\fax\*.dll" />
+				<include name="lib\velocity\*.dll" />
+				<include name="lib\quartz\*.dll" />
+				<include name="lib\Calculator\PhCalcTypeLib.dll" />
+				<include name="lib\structuremap\*.dll" />
+				<include name="lib\postsharp\*.dll" />
+				<include name="lib\xval\*.dll" />
+			</fileset>
+		</copy>
+		<if test="${debug != 'false'}">
+			<copy todir="deploy\web-trainer\bin">
+				<fileset basedir="build-full" >
+					<include name="Empower.pdb" />
+					<include name="Empower.Web.Trainer.pdb" />
+				</fileset>
+			</copy>
+		</if>
+		
+
+		<mkdir dir="deploy\web-IceRxAdmin" />
+		<copy todir="deploy\web-IceRxAdmin">
+			<fileset basedir="src\app\Empower.Web.IceRxAdmin">
+				<include name="**\*.aspx" />
+				<include name="**\*.ascx" />
+				<include name="**\*.master" />
+				<include name="*.asax" />
+				<include name="*.config" />
+				<include name="Views\*.config" />
+				<include name="Content\**\*.*" />
+				<include name="Scripts\**\*.*" />
+			</fileset>
+		</copy>
+		<mkdir dir="deploy\web-IceRxAdmin\bin" />
+		<copy todir="deploy\web-IceRxAdmin\bin" flatten="true">
+			<fileset>
+				<include name="build-full\Empower.dll" />
+				<include name="build-full\Empower.Web.IceRxAdmin.dll" />
+				<include name="lib\castle\*.*"/>
+				<include name="lib\log4net\*.dll"/>
+				<include name="lib\filehelpers\*.dll"/>
+				<include name="lib\aspmvc\Microsoft.Web.Mvc.dll" />
+				<include name="lib\aspmvc\System.Web.Mvc.dll" />
+				<include name="lib\pdf\*.dll" />
+				<include name="lib\fax\*.dll" />
+				<include name="lib\velocity\*.dll" />
+				<include name="lib\quartz\*.dll" />
+				<include name="lib\Calculator\PhCalcTypeLib.dll" />
+				<include name="lib\structuremap\*.dll" />
+				<include name="lib\postsharp\*.dll" />
+				<include name="lib\xval\*.dll" />
+			</fileset>
+		</copy>
+		<if test="${debug != 'false'}">
+			<copy todir="deploy\web-IceRxAdmin\bin">
+				<fileset basedir="build-full" >
+					<include name="Empower.pdb" />
+					<include name="Empower.Web.IceRxAdmin.pdb" />
+				</fileset>
+			</copy>
+		</if>
+		
+
+		<mkdir dir="deploy\web-IceRxReg" />
+		<copy todir="deploy\web-IceRxReg">
+			<fileset basedir="src\app\Empower.Web.IceRxRegistration">
+				<include name="**\*.aspx" />
+				<include name="**\*.ascx" />
+				<include name="**\*.master" />
+				<include name="*.asax" />
+				<include name="*.config" />
+				<include name="Views\*.config" />
+				<include name="Content\**\*.*" />
+				<include name="Scripts\**\*.*" />
+			</fileset>
+		</copy>
+		<mkdir dir="deploy\web-IceRxReg\bin" />
+		<copy todir="deploy\web-IceRxReg\bin" flatten="true">
+			<fileset>
+				<include name="build-full\Empower.dll" />
+				<include name="build-full\Empower.Web.IceRxRegistration.dll" />
+				<include name="lib\castle\*.*"/>
+				<include name="lib\log4net\*.dll"/>
+				<include name="lib\filehelpers\*.dll"/>
+				<include name="lib\aspmvc\Microsoft.Web.Mvc.dll" />
+				<include name="lib\aspmvc\System.Web.Mvc.dll" />
+				<include name="lib\pdf\*.dll" />
+				<include name="lib\fax\*.dll" />
+				<include name="lib\velocity\*.dll" />
+				<include name="lib\quartz\*.dll" />
+				<include name="lib\Calculator\PhCalcTypeLib.dll" />
+				<include name="lib\structuremap\*.dll" />
+				<include name="lib\postsharp\*.dll" />
+				<include name="lib\xval\*.dll" />
+			</fileset>
+		</copy>
+		<if test="${debug != 'false'}">
+			<copy todir="deploy\web-IceRxReg\bin">
+				<fileset basedir="build-full" >
+					<include name="Empower.pdb" />
+					<include name="Empower.Web.IceRxRegistration.pdb" />
+				</fileset>
+			</copy>
+		</if>
+
+
+		<mkdir dir="deploy\service" />
+		<copy todir="deploy\service" flatten="true">
+			<fileset>
+				<include name="build-full\Empower.dll" />
+				<include name="build-full\Empower.Service.exe"/>
+				<include name="lib\sharpssh\*.*"/>
+				<include name="lib\castle\*.*"/>
+				<include name="lib\log4net\*.dll"/>
+				<include name="lib\filehelpers\*.dll"/>
+				<include name="lib\sharpZipLib\*.dll" />
+				<include name="lib\quartz\*.dll" />
+				<include name="lib\pdf\*.dll" />
+				<include name="lib\fax\*.dll" />
+				<include name="lib\velocity\*.dll" />
+				<include name="lib\webdav\*.dll" />
+				<include name="src\app\Empower.Service\configservice.xml"/>
+				<include name="src\app\Empower.Service\*.config"/>
+				<include name="lib\structuremap\*.dll" />
+				<include name="lib\aspmvc\Microsoft.Web.Mvc.dll" />
+				<include name="lib\aspmvc\System.Web.Mvc.dll" />
+				<include name="lib\postsharp\*.dll" />
+				<include name="lib\xval\*.dll" />
+			</fileset>
+		</copy>
+		<move file="deploy\service\app.config" tofile="deploy\service\Empower.Service.config" overwrite="true" />
+		<if test="${debug != 'false'}">
+			<copy todir="deploy\service">
+				<fileset basedir="build-full" >
+					<include name="Empower.pdb" />
+					<include name="Empower.Service.pdb" />
+				</fileset>
+			</copy>
+		</if>
+
+		<mkdir dir="deploy\license" />
+		<copy todir="deploy\license" flatten="true">
+			<fileset>
+				<include name="lib\pdf\*.lic" />
+			</fileset>
+		</copy>
+
+		<mkdir dir="deploy\signatures" />
+		<copy todir="deploy\signatures" flatten="true">
+			<fileset>
+				<include name="signatures\*.*" />
+			</fileset>
+		</copy>
+		<mkdir dir="deploy\log" />
+		<mkdir dir="deploy\ftp" />
+	</target>
+</project>

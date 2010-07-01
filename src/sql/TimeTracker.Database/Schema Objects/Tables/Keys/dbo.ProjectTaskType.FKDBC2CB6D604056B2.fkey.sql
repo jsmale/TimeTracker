@@ -1,0 +1,4 @@
+﻿ALTER TABLE [dbo].[ProjectTaskType] ADD
+CONSTRAINT [FKDBC2CB6D604056B2] FOREIGN KEY ([Type_id]) REFERENCES [dbo].[TaskTypes] ([Id])
+
+
