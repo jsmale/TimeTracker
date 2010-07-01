@@ -19,28 +19,30 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TimeTracker.UnitTests.Tasks
 {
-    public class MachineSpecProjectTaskTypeTasksTest : Observes<ProjectTaskTypeTasks>
+    public class WhenCreateRequestIsValid : Observes<ProjectTaskTypeTasks>
     {
-        private Establish e = () =>
-                                  {
-                                      createRequest = new CreateProjectTaskType
-                                                          {
-                                                              Name = "Name",
-                                                              ProjectId = Guid.NewGuid(),
-                                                              TaskId = Guid.NewGuid(),
-                                                              TaskTypeId = Guid.NewGuid()
-                                                          };
-                                      repository = the_dependency<IRepository>();
-                                  };
+        Establish e = () =>
+        {
+            createRequest = new CreateProjectTaskType
+            {
+                Name = "Name",
+                ProjectId = Guid.NewGuid(),
+                TaskId = Guid.NewGuid(),
+                TaskTypeId = Guid.NewGuid()
+            };
+            repository = the_dependency<IRepository>();
+        };
 
-        private Because b = () => sut.Create(createRequest);
+        Because b = () => sut.Create(createRequest);
 
-        private It ShouldCreate_should_get_project_from_ProjectId = () =>
-                                                                        {
-                                                                            repository.AssertWasCalled(x => x.Get<Project>(createRequest.ProjectId));
-                                                                        };
-        private static IRepository repository;
-        private static CreateProjectTaskType createRequest;
+        It shouldGetProjectFromProjectId = () =>
+            repository.AssertWasCalled(x => x.Get<Project>(createRequest.ProjectId));
+
+        It shouldGetTaskFromTaskId = () =>
+            repository.AssertWasCalled(x => x.Get<Task>(createRequest.TaskId));
+
+        static IRepository repository;
+        static CreateProjectTaskType createRequest;
     }
 	[TestClass]
 	public class ProjectTaskTypeTasksTests
@@ -64,24 +66,6 @@ namespace TimeTracker.UnitTests.Tasks
 		IProjectTaskTypeTasks CreateSUT()
 		{
 			return new ProjectTaskTypeTasks(repository);
-		}
-
-		[TestMethod]
-		[Description("Tasks")]
-		public void Create_should_get_project_from_ProjectId()
-		{
-			CreateSUT().Create(createRequest);
-
-			repository.AssertWasCalled(x => x.Get<Project>(createRequest.ProjectId));
-		}
-
-		[TestMethod]
-		[Description("Tasks")]
-		public void Create_should_get_task_from_TaskId()
-		{
-			CreateSUT().Create(createRequest);
-
-			repository.AssertWasCalled(x => x.Get<Task>(createRequest.TaskId));
 		}
 
 		[TestMethod]
